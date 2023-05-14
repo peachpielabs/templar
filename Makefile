@@ -1,8 +1,9 @@
 #!/usr/bin/make
 
+CURRENT_GIT_HASH := $(shell git rev-parse --verify HEAD)
 .PHONY: build
 build:
-	go build -a -o ./gitformer
+	go build -a -o ./gitformer -ldflags="-X github.com/peachpielabs/gitformer/cmd/gitformer.version=$(CURRENT_GIT_HASH)"
 
 .PHONY: test
 test:

@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "v0.0.1-pre-alpha"
+var version = "No version provided"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -31,7 +31,7 @@ For other commands, run:
 	
 	gitformer --help
 
-For more information, view the docs at https://gitformer.com/docs/cli or follow the Getting Started Guide at https://gitformer.com/docs/cli/getting-started
+For more information, view the docs at https://github.com/peachpielabs/gitformer
 `,
 }
 
