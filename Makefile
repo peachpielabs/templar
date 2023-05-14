@@ -6,10 +6,10 @@ build:
 
 .PHONY: test
 test:
-	go test -v ./cmd/
+	go test -v ./cmd/gitformer/
 	go test -v ./pkg/playbook/
 
-.PHONY: lint
+.PHON: lint
 lint:
 	go vet -v ./cmd/
 	go vet -v ./pkg/playbook/
