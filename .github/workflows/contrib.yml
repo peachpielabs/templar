@@ -1,4 +1,4 @@
-name: "CLA Assistant"
+name: "Contrib"
 on:
   issue_comment:
     types: [created]
@@ -31,5 +31,13 @@ jobs:
           path-to-document: "https://github.com/peachpielabs/cla/blob/main/README.md"
           # branch should not be protected
           branch: 'main'
-          allowlist: dependabot*
+          allowlist: a12ox,dependabot*
+  auto-approve-dependabot:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_target'
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: hmarr/auto-approve-action@v3
+        if: github.actor == 'dependabot[bot]'
 
