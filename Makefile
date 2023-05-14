@@ -3,7 +3,7 @@
 CURRENT_GIT_HASH := $(shell git rev-parse --verify HEAD)
 .PHONY: build
 build:
-	go build -a -o ./gitformer -ldflags="-X github.com/peachpielabs/gitformer/cmd/gitformer.version=$(CURRENT_GIT_HASH)"
+	go build -a -o ./dist/gitformer -ldflags="-X github.com/peachpielabs/gitformer/cmd/gitformer.version=$(CURRENT_GIT_HASH)"
 
 .PHONY: test
 test:
