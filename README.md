@@ -37,7 +37,7 @@ Since the binary is currently unsigned, on MacOS you will need to `right click >
 
 Confirm you're able to execute the version subcommand:
 ```bash
-gitformer version
+gitformer --version
 ```
 
 ## Getting Started
@@ -131,12 +131,6 @@ cd gitformer-cli
 Download dependencies:
 ```bash
 go mod download
-```
-
-
-Get the installed version of the CLI:
-```bash
-go run main.go version
 ```
 
 Build the CLI:
