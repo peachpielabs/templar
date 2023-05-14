@@ -24,7 +24,7 @@ GitFormer is not limited to any specific technology and can be used with custom 
 
 ## Usage
 
-Install the latest version of Gitformer from the list of [Releases](https://github.com/gitformerapp/gitformer/releases).
+Install the latest version of Gitformer from the list of [Releases](https://github.com/peachpielabs/gitformer/releases).
 
 ```bash
 wget <RELEASE_URL>
@@ -124,7 +124,7 @@ View the [Playbook Configuration Syntax](docs/playbooks.md) to learn more.
 
 Clone the repository:
 ```bash
-git clone git@github.com:gitformerapp/gitformer.git
+git clone git@github.com:peachpielabs/gitformer.git
 cd gitformer-cli
 ```
 

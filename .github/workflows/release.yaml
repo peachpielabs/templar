@@ -43,3 +43,4 @@ jobs:
         goversion: "https://dl.google.com/go/go1.19.3.linux-amd64.tar.gz"
         binary_name: "gitformer"
         extra_files: LICENSE README.md
+        ldflags: "-X github.com/peachpielabs/gitformer/cmd/gitformer.version=${{ github.ref }}"

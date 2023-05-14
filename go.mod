@@ -1,4 +1,4 @@
-module github.com/gitformerapp/gitformer
+module github.com/peachpielabs/gitformer
 
 go 1.19
 

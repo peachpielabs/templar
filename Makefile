@@ -9,7 +9,7 @@ test:
 	go test -v ./cmd/
 	go test -v ./pkg/playbook/
 
-.PHONT: lint
+.PHONY: lint
 lint:
 	go vet -v ./cmd/
 	go vet -v ./pkg/playbook/

@@ -4,8 +4,8 @@ Copyright (c) 2023 Peach Pie Labs, LLC.
 
 package main
 
-import "github.com/gitformerapp/gitformer/cmd"
+import "github.com/peachpielabs/gitformer/cmd/gitformer"
 
 func main() {
-	cmd.Execute()
+	gitformer.Execute()
 }
