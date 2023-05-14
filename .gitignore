@@ -1,0 +1,6 @@
+
+bin/
+gitformer
+examples/terraform_new_zone_record/terraform/
+examples/terraform_gcp_firewall_rule/terraform/
+**/.DS_Store

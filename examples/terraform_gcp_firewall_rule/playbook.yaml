@@ -1,0 +1,18 @@
+name: New Zone Record
+description: "Create a new DNS zone record using Terraform."
+questions:
+  - prompt: "Firewall rule name"
+    variablename: rule_name
+    placeholder: "my-firewall-rule"
+    required: true
+    inputtype: textfield
+    variabletype: string
+  - prompt: "Source tags"
+    inputtype: textfield
+    variablename: source_tags
+    required: true
+    variabletype: string
+    default: A
+outputs:
+  - templatefile: examples/terraform_gcp_firewall_rule/firewall_rule.tpl
+    outputfile: examples/terraform_gcp_firewall_rule/terraform/{{.rule_name}}.tf
