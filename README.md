@@ -3,7 +3,7 @@
 GitFormer is a tool to generate code from templates and user input. 
 
 <p align="center" width="100%">
-    <img width="50%" src="docs/images/GitFormerDiagram.png" alt="GitFormer Diagram">
+    <img width="60%" src="docs/images/GitFormerDiagram.png" alt="GitFormer Diagram">
 </p>
 
 
