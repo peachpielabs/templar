@@ -1,6 +1,6 @@
-# GitFormer CLI
+# GitFormer
 
-The GitFormer CLI is a tool to generate code from templates and user input. 
+GitFormer is a tool to generate code from templates and user input. 
 
 <p align="center" width="100%">
     <img width="50%" src="docs/images/GitFormerDiagram.png" alt="GitFormer Diagram">
