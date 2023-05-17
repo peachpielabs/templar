@@ -3,8 +3,7 @@
 GitFormer is a tool to generate code from templates and user input. 
 
 ## Demo
-
-https://github.com/peachpielabs/gitformer/assets/133522977/3b960b6c-1f7b-4278-86f9-93d6e60fe7f2
+![gitformer-demo-vid-1](https://github.com/peachpielabs/gitformer/assets/133522977/e79301f3-19be-4aeb-948f-d1f6de8b89d4)
 
 
 ## Use Cases
