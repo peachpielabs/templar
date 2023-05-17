@@ -6,9 +6,7 @@ GitFormer is a tool to generate code from templates and user input.
 
 https://github.com/peachpielabs/gitformer/assets/133522977/3b960b6c-1f7b-4278-86f9-93d6e60fe7f2
 
-<p align="center" width="100%">
-    <img width="60%" src="docs/images/GitFormerDiagram.png" alt="GitFormer Diagram">
-</p>
+
 
 
 ## Use Cases
@@ -26,7 +24,13 @@ GitFormer can be useful anytime code needs to be generated with a few minor modi
 
 GitFormer is not limited to any specific technology and can be used with custom file formats. 
 
-## Usage
+## How It Works
+
+<p align="center" width="100%">
+    <img width="60%" src="docs/images/GitFormerDiagram.png" alt="GitFormer Diagram">
+</p>
+
+## Installing
 
 Install the latest version of Gitformer from the list of [Releases](https://github.com/peachpielabs/gitformer/releases).
 
