@@ -7,11 +7,14 @@ GitFormer is a tool to generate code from templates and user input.
 https://github.com/peachpielabs/gitformer/assets/133522977/3b960b6c-1f7b-4278-86f9-93d6e60fe7f2
 
 
-
-
 ## Use Cases
 
-GitFormer can be useful anytime code needs to be generated with a few minor modifications, such as with the following Configuration as Code / Infrastructure as Code tools:
+GitFormer can be useful anytime code needs to be generated with a few minor modifications, 
+such as with the Configuration as Code / Infrastructure as Code tools listed below. 
+While these tools have some built-in support for variables and resuable code modules, 
+developers still end up copying and pasting code when creating similar resources. GitFormer 
+helps automate these repetitive code changes by collecting user input and generating code 
+from templates.
 
 - Terraform
 - Ansible
@@ -23,8 +26,6 @@ GitFormer can be useful anytime code needs to be generated with a few minor modi
 - GCP Cloud Deployment Manager
 
 GitFormer is not limited to any specific technology and can be used with custom file formats. 
-
-## How It Works
 
 <p align="center" width="100%">
     <img width="60%" src="docs/images/GitFormerDiagram.png" alt="GitFormer Diagram">
