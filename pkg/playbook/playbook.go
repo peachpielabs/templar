@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -51,7 +51,7 @@ func LoadYAMLFile(file_path string) (Playbook, error) {
 	defer yamlFile.Close()
 
 	// Read the file into a byte array
-	byteValue, err := ioutil.ReadAll(yamlFile)
+	byteValue, err := io.ReadAll(yamlFile)
 	if err != nil {
 		log.Fatal(err)
 	}
