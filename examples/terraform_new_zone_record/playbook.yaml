@@ -2,32 +2,32 @@ name: New Zone Record
 description: "Create a new DNS zone record using Terraform."
 questions:
   - prompt: "Request subdomain under example.com"
-    variablename: subdomain_name
+    variableName: subdomain_name
     placeholder: yourdomain.example.com
     required: true
-    inputtype: textfield
-    variabletype: string
+    inputType: textfield
+    variableType: string
   - prompt: "DNS record type"
-    inputtype: select
-    variablename: record_type
+    inputType: select
+    variableName: record_type
     required: true
-    variabletype: string
-    validvalues:
+    variableType: string
+    validValues:
       - A
       - CNAME
     default: A
   - prompt: "DNS Value (IP Address for A records or fully qualified domain name for CNAME records)"
-    variablename: record_value
-    inputtype: textfield
+    variableName: record_value
+    inputType: textfield
     required: true
     placeholder: "192.168.1.1"
-    variabletype: string
+    variableType: string
   - prompt: "TTL (Time to Live)"
-    variablename: ttl
-    inputtype: textfield
+    variableName: ttl
+    inputType: textfield
     required: true
-    variabletype: int
+    variableType: int
     default: "3600"
 outputs:
-  - templatefile: zone_record.tpl
-    outputfile: terraform/{{.subdomain_name}}.tf
+  - templateFile: zone_record.tpl
+    outputFile: terraform/{{.subdomain_name}}.tf

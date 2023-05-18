@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -19,26 +19,26 @@ import (
 )
 
 type Playbook struct {
-	Name        string     `json:"name,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Questions   []Question `json:"questions,omitempty"`
-	Outputs     []Output   `json:"outputs"`
+	Name        string     `yaml:"name,omitempty"`
+	Description string     `yaml:"description,omitempty"`
+	Questions   []Question `yaml:"questions,omitempty"`
+	Outputs     []Output   `yaml:"outputs"`
 }
 
 type Question struct {
-	Prompt       string   `json:"prompt,omitempty"`
-	Placeholder  string   `json:"placeholder,omitempty"`
-	Required     bool     `json:"required,omitempty"`
-	VariableName string   `json:"variablename"`
-	InputType    string   `json:"inputtype"`
-	VariableType string   `json:"variabletype"`
-	Default      string   `json:"default,omitempty"`
-	ValidValues  []string `json:"validvalues,omitempty"`
+	Prompt       string   `yaml:"prompt,omitempty"`
+	Placeholder  string   `yaml:"placeholder,omitempty"`
+	Required     bool     `yaml:"required,omitempty"`
+	VariableName string   `yaml:"variableName"`
+	InputType    string   `yaml:"inputType"`
+	VariableType string   `yaml:"variableType"`
+	Default      string   `yaml:"default,omitempty"`
+	ValidValues  []string `yaml:"validValues,omitempty"`
 }
 
 type Output struct {
-	TemplateFile string `json:"templatefile,omitempty"`
-	OutputFile   string `json:"outputfile,omitempty"`
+	TemplateFile string `yaml:"templateFile,omitempty"`
+	OutputFile   string `yaml:"outputFile,omitempty"`
 }
 
 func LoadYAMLFile(file_path string) (Playbook, error) {
@@ -51,7 +51,7 @@ func LoadYAMLFile(file_path string) (Playbook, error) {
 	defer yamlFile.Close()
 
 	// Read the file into a byte array
-	byteValue, err := ioutil.ReadAll(yamlFile)
+	byteValue, err := io.ReadAll(yamlFile)
 	if err != nil {
 		log.Fatal(err)
 	}
