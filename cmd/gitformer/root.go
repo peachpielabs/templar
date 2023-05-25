@@ -7,6 +7,7 @@ package gitformer
 import (
 	"os"
 
+	"github.com/peachpielabs/gitformer/pkg/playbook"
 	"github.com/spf13/cobra"
 )
 
@@ -40,6 +41,7 @@ For more information, view the docs at https://github.com/peachpielabs/gitformer
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
+		playbook.CaptureError(err)
 		os.Exit(1)
 	}
 }

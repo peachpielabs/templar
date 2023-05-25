@@ -14,7 +14,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
+	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v2"
 )
 
@@ -41,26 +43,33 @@ type Output struct {
 	OutputFile   string `yaml:"outputFile,omitempty"`
 }
 
+func CaptureError(err error) {
+	if os.Getenv("GITFORMER_TELEMETRY_DISABLED") != "true" {
+		sentry.CaptureException(err)
+		sentry.Flush(2 * time.Second)
+	}
+}
+
 func LoadYAMLFile(file_path string) (Playbook, error) {
 
 	// Open our yamlFile
 	yamlFile, err := os.Open(file_path)
 	if err != nil {
-		log.Fatal(err)
+		return Playbook{}, err
 	}
 	defer yamlFile.Close()
 
 	// Read the file into a byte array
 	byteValue, err := io.ReadAll(yamlFile)
 	if err != nil {
-		log.Fatal(err)
+		return Playbook{}, err
 	}
 
 	// Unmarshal the yaml into a Playbook struct
 	var playbook Playbook
 	err = yaml.Unmarshal(byteValue, &playbook)
 	if err != nil {
-		log.Fatal(err)
+		return Playbook{}, err
 	}
 
 	return playbook, err
@@ -119,9 +128,9 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 	template_filepath = playbook_base_dir + "/" + template_filepath
 	filenameTemplate := template.Must(template.New("filename").Parse(output_filepath))
 	var fileTpl bytes.Buffer
-	err1 := filenameTemplate.Execute(&fileTpl, input_data)
-	if err1 != nil {
-		panic(err1)
+	err := filenameTemplate.Execute(&fileTpl, input_data)
+	if err != nil {
+		return err
 	}
 	outputFilePath := playbook_base_dir + "/" + fileTpl.String()
 	outputDir := path.Dir(outputFilePath)
@@ -129,12 +138,12 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 
 	tmpl, err := template.New(filepath.Base(template_filepath)).ParseFiles(template_filepath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	var tpl bytes.Buffer
 	err = tmpl.Execute(&tpl, input_data)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	renderedFileContents := tpl.String()
 
@@ -142,18 +151,19 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 	err = os.MkdirAll(outputDir, os.ModePerm)
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 
 	// write renderedFileContents to the output file
 	f, err := os.Create(outputFilePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer f.Close()
 
 	_, err = f.WriteString(renderedFileContents)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Printf("Template rendered successfully to %v\n", outputFilePath)
