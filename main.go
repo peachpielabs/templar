@@ -10,6 +10,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/peachpielabs/gitformer/cmd/gitformer"
+	"github.com/peachpielabs/gitformer/pkg/playbook"
 )
 
 var version = "No release version provided"
@@ -40,6 +41,7 @@ func main() {
 		Release:          version,
 	})
 	if err != nil {
+		playbook.CaptureError(err)
 		log.Fatalf("sentry.Init: %s", err)
 	}
 	// Flush buffered events before the program terminates.

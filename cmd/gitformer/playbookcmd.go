@@ -27,6 +27,7 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TOOD: Collect user input for template name
 		if len(args) < 1 {
+			pb.CaptureError(errors.New("provide the filename of the playbook to run. For example:\n `gitformer run playbook.yaml`"))
 			log.Fatal("Provide the filename of the playbook to run. For example:\n `gitformer run playbook.yaml`")
 		}
 		playbook_filepath := args[0]
@@ -35,6 +36,7 @@ var runCmd = &cobra.Command{
 		playbook_base_dir := path.Dir(playbook_filepath)
 		playbook, err := pb.LoadYAMLFile(playbook_filepath)
 		if err != nil {
+			pb.CaptureError(err)
 			log.Fatal(err)
 		}
 		input_data := make(map[string]interface{})
@@ -49,6 +51,7 @@ var runCmd = &cobra.Command{
 				_, result, err := prompt.Run()
 
 				if err != nil {
+					pb.CaptureError(err)
 					fmt.Printf("Prompt failed %v\n", err)
 					return
 				}
@@ -70,6 +73,7 @@ var runCmd = &cobra.Command{
 				result, err := prompt.Run()
 
 				if err != nil {
+					pb.CaptureError(err)
 					fmt.Printf("Prompt failed %v\n", err)
 					return
 				}
@@ -78,7 +82,11 @@ var runCmd = &cobra.Command{
 		}
 
 		for _, render := range playbook.Outputs {
-			pb.RenderTemplate(playbook_base_dir, input_data, render.TemplateFile, render.OutputFile)
+			err := pb.RenderTemplate(playbook_base_dir, input_data, render.TemplateFile, render.OutputFile)
+			if err != nil {
+				pb.CaptureError(err)
+				log.Fatal(err)
+			}
 		}
 	},
 }
@@ -89,6 +97,7 @@ var validateCmd = &cobra.Command{
 	Long:  `Validate playbook configuration and template files.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
+			pb.CaptureError(errors.New("provide the file name of the playbook to validate. For example:\n `gitformer validate playbook.yaml`"))
 			log.Fatal("Provide the file name of the playbook to validate. For example:\n `gitformer validate playbook.yaml`")
 		}
 		playbook_filename := args[0]
@@ -97,16 +106,20 @@ var validateCmd = &cobra.Command{
 		playbook_base_dir := path.Dir(playbook_filename)
 		playbook, err := pb.LoadYAMLFile(playbook_filename)
 		if err != nil {
+			pb.CaptureError(err)
 			log.Fatal(err)
 		}
 
 		result, err := pb.ValidatePlaybook(playbook, playbook_base_dir)
 		if err != nil {
+			pb.CaptureError(err)
 			log.Fatal(err)
 		}
 		if !result {
+			pb.CaptureError(errors.New("playbook is not valid"))
 			log.Fatal("Playbook is not valid")
 		} else {
+			pb.CaptureError(fmt.Errorf("playbook %v is valid", playbook.Name))
 			fmt.Printf("Playbook %v is valid\n", playbook.Name)
 		}
 	},
