@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v2"
@@ -45,6 +46,7 @@ type Output struct {
 func CaptureError(err error) {
 	if os.Getenv("GITFORMER_TELEMETRY_DISABLED") != "true" {
 		sentry.CaptureException(err)
+		sentry.Flush(2 * time.Second)
 	}
 }
 
