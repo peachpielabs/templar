@@ -19,5 +19,5 @@ test:
 
 .PHON: lint
 lint:
-	go vet -v ./cmd/
+	go vet -v ./cmd/*/
 	go vet -v ./pkg/playbook/
