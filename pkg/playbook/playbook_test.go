@@ -115,7 +115,7 @@ func TestRenderTemplate(t *testing.T) {
 	playbook_base_dir := "../../examples/terraform_new_zone_record"
 	template_file := "zone_record.tpl"
 	output_file := "terraform/testsubdomain.tf"
-	err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
+	_, _, err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
 	if err != nil {
 		t.Fatalf("Error rendering template: %s", err)
 	}
@@ -129,7 +129,7 @@ func TestRenderTemplateWithList(t *testing.T) {
 	playbook_base_dir := "../../examples/terraform_gcp_firewall_rule"
 	template_file := "../../examples/terraform_gcp_firewall_rule/firewall_rule.tpl"
 	output_file := "../../examples/terraform_gcp_firewall_rule/terraform/test_rule.tf"
-	err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
+	_, _, err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
 	if err != nil {
 		t.Fatalf("Error rendering template: %s", err)
 	}
