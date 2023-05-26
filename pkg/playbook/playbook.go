@@ -163,19 +163,24 @@ func SaveToOutputFile(outputFilePath, renderedFileContents string, overwriteFlag
 }
 
 func writeToExistingFile(outputFilePath, renderedFileContents string, overwriteFlag, appendFlag bool) error {
-	var overwrite bool
+	var overwrite *bool
+	var flag bool
 
 	if overwriteFlag && appendFlag {
 		overwrite = promptForConfirmation("The output file already exists. Do you want to overwrite it? (yes/no): ")
 	} else if overwriteFlag {
-		overwrite = true
+		flag = true
+		overwrite = &flag
 	} else if appendFlag {
-		overwrite = false
+		overwrite = &flag
 	} else {
 		overwrite = promptForConfirmation("The output file already exists. Do you want to overwrite it? (yes/no): ")
 	}
 
-	if overwrite {
+	if overwrite == nil {
+		log.Println("provide valid response")
+		return errors.New("invalid response")
+	} else if *overwrite {
 		return overwriteToFile(outputFilePath, renderedFileContents)
 	} else {
 		return appendToFile(outputFilePath, renderedFileContents)
@@ -223,10 +228,19 @@ func appendToFile(outputFilePath, renderedFileContents string) error {
 	return nil
 }
 
-func promptForConfirmation(message string) bool {
+func promptForConfirmation(message string) *bool {
+	var flag bool
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print(message)
 	answer, _ := reader.ReadString('\n')
 	answer = strings.ToLower(strings.TrimSpace(answer))
-	return answer == "yes" || answer == "y"
+	if answer == "yes" || answer == "y" {
+		flag = true
+		return &flag
+	} else if answer == "no" || answer == "n" {
+		return &flag
+	}
+
+	return nil
 }
