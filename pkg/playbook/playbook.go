@@ -164,15 +164,14 @@ func SaveToOutputFile(outputFilePath, renderedFileContents string, overwriteFlag
 
 func writeToExistingFile(outputFilePath, renderedFileContents string, overwriteFlag, appendFlag bool) error {
 	var overwrite *bool
-	var flag bool
+	flag := true
 
 	if overwriteFlag && appendFlag {
 		overwrite = promptForConfirmation("The output file already exists. Do you want to overwrite it? (yes/no): ")
 	} else if overwriteFlag {
-		flag = true
 		overwrite = &flag
 	} else if appendFlag {
-		overwrite = &flag
+		return appendToFile(outputFilePath, renderedFileContents)
 	} else {
 		overwrite = promptForConfirmation("The output file already exists. Do you want to overwrite it? (yes/no): ")
 	}
