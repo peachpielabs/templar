@@ -182,9 +182,9 @@ func writeToExistingFile(outputFilePath, renderedFileContents string, overwriteF
 		return errors.New("invalid response")
 	} else if *overwrite {
 		return overwriteToFile(outputFilePath, renderedFileContents)
-	} else {
-		return appendToFile(outputFilePath, renderedFileContents)
 	}
+
+	return errors.New("overwrite the file, delete the file, or provide a new name")
 }
 
 func overwriteToFile(outputFilePath, renderedFileContents string) error {
