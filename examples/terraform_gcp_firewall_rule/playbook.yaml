@@ -14,5 +14,5 @@ questions:
     variableType: string
     default: A
 outputs:
-  - templatefile: examples/terraform_gcp_firewall_rule/firewall_rule.tpl
-    outputfile: examples/terraform_gcp_firewall_rule/terraform/{{.rule_name}}.tf
+  - templateFile: firewall_rule.tpl
+    outputFile: terraform/{{.rule_name}}.tf

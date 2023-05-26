@@ -98,8 +98,8 @@ func TestLoadYAMLFile(t *testing.T) {
 
 func TestValidatePlaybook(t *testing.T) {
 	for _, test := range getPlaybookTestData() {
-		if output, err := ValidatePlaybook(test.playbook, test.playbook_base_dir); output != test.expected {
-			t.Errorf("Output %v not equal to expected %v; err: %v", output, test.expected, err)
+		if err := ValidatePlaybook(test.playbook, test.playbook_base_dir); err != nil {
+			t.Errorf("playbook is not valid. err: %v", err)
 		}
 	}
 

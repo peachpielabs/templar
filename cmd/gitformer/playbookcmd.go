@@ -48,6 +48,13 @@ var runCmd = &cobra.Command{
 			pb.CaptureError(err)
 			log.Fatal(err)
 		}
+
+		err = pb.ValidatePlaybook(playbook, playbook_base_dir)
+		if err != nil {
+			pb.CaptureError(errors.New("playbook is not valid"))
+			log.Fatal("Playbook is not valid")
+		}
+
 		input_data := make(map[string]interface{})
 		for _, question := range playbook.Questions {
 			if question.InputType == "select" {
@@ -126,17 +133,11 @@ var validateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		result, err := pb.ValidatePlaybook(playbook, playbook_base_dir)
+		err = pb.ValidatePlaybook(playbook, playbook_base_dir)
 		if err != nil {
-			pb.CaptureError(err)
-			log.Fatal(err)
-		}
-		if !result {
 			pb.CaptureError(errors.New("playbook is not valid"))
 			log.Fatal("Playbook is not valid")
-		} else {
-			pb.CaptureError(fmt.Errorf("playbook %v is valid", playbook.Name))
-			fmt.Printf("Playbook %v is valid\n", playbook.Name)
 		}
+		log.Println("Playbook is valid!!")
 	},
 }
