@@ -59,7 +59,7 @@ var expected_playbook_data = Playbook{
 type playbookTest struct {
 	playbook          Playbook
 	playbook_base_dir string
-	expected          bool
+	is_valid          bool
 }
 
 func getPlaybookTestData() []playbookTest {
@@ -98,11 +98,19 @@ func TestLoadYAMLFile(t *testing.T) {
 
 func TestValidatePlaybook(t *testing.T) {
 	for _, test := range getPlaybookTestData() {
-		if err := ValidatePlaybook(test.playbook, test.playbook_base_dir); err != nil {
-			t.Errorf("playbook is not valid. err: %v", err)
+		err := ValidatePlaybook(test.playbook, test.playbook_base_dir)
+		if err != nil {
+			// The given playbook should be invalid.
+			if test.is_valid {
+				t.Errorf("no error expected. playbook is not valid. err: %v", err)
+			}
+		} else {
+			// The given playbook should be valid.
+			if !test.is_valid {
+				t.Errorf("expected error for the given invalid playbook")
+			}
 		}
 	}
-
 }
 
 func TestRenderTemplate(t *testing.T) {

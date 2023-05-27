@@ -83,35 +83,38 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) error {
 		return errors.New("playbook must have a name")
 	}
 	if playbook.Questions == nil || len(playbook.Questions) == 0 {
-		return errors.New("Playbook must have at least one question")
+		return errors.New("playbook must have at least one question")
 	}
 	for _, question := range playbook.Questions {
 		if question.Prompt == "" {
-			return errors.New("every question must have a prompt")
+			return errors.New("no prompt provided. every question must have a prompt")
 		}
 		if question.VariableName == "" {
-			return errors.New("every question must have a variable name")
+			return errors.New("no variable name provided. every question must have a variable name")
 		}
 		if question.InputType == "" {
-			return errors.New("every question must have an input type")
+			return errors.New("no inputType provided. every question must have an input type")
 		}
 		if question.VariableType == "" {
-			return errors.New("every question must have a variable type")
+			return errors.New("no variableType provided. every question must have a variable type")
 		}
 		if question.InputType == "select" && (question.ValidValues == nil || len(question.ValidValues) == 0) {
-			return errors.New("every select question must have at least one valid value")
+			return errors.New("select statement does not have a valid value. every select question must have at least one valid value")
 		}
 	}
 
 	// Check that there is at least one output
 	if playbook.Outputs == nil || len(playbook.Outputs) == 0 {
-		return errors.New("playbook must have at least one output (template file and output file)")
+		return errors.New("no output provided. playbook must have at least one output (template file and output file)")
 	}
 
 	// Check every output has both a template file and output file
 	for _, output := range playbook.Outputs {
-		if output.TemplateFile == "" || output.OutputFile == "" {
-			return errors.New("every output must have both a template file and output file")
+		if output.TemplateFile == "" {
+			return errors.New("no templateFile given in the output. every output must have a template file")
+		}
+		if output.OutputFile == "" {
+			return errors.New("no outputFile given in the output. every output must have a template file")
 		}
 	}
 
@@ -119,7 +122,7 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) error {
 	for _, output := range playbook.Outputs {
 		_, err := template.ParseFiles(playbook_base_dir + "/" + output.TemplateFile)
 		if err != nil {
-			return err
+			return errors.Join(errors.New("invalid template file. %s"), err)
 		}
 	}
 

@@ -7,10 +7,10 @@ package gitformer
 import (
 	"errors"
 	"fmt"
+	"github.com/manifoldco/promptui"
 	"log"
 	"path"
 
-	"github.com/manifoldco/promptui"
 	pb "github.com/peachpielabs/gitformer/pkg/playbook"
 	"github.com/spf13/cobra"
 )
@@ -40,78 +40,90 @@ var runCmd = &cobra.Command{
 			log.Fatal("Provide the filename of the playbook to run. For example:\n `gitformer run playbook.yaml`")
 		}
 		playbook_filepath := args[0]
+		runPlaybook(playbook_filepath)
+	},
+}
 
-		fmt.Printf("Running playbook %v\n", playbook_filepath)
-		playbook_base_dir := path.Dir(playbook_filepath)
-		playbook, err := pb.LoadYAMLFile(playbook_filepath)
+func runPlaybook(playbook_filepath string) {
+	fmt.Printf("Running playbook %v\n", playbook_filepath)
+
+	playbook_base_dir := path.Dir(playbook_filepath)
+	playbook, err := pb.LoadYAMLFile(playbook_filepath)
+	if err != nil {
+		pb.CaptureError(err)
+		log.Fatal(err)
+	}
+
+	err = pb.ValidatePlaybook(playbook, playbook_base_dir)
+	if err != nil {
+		pb.CaptureError(errors.New("playbook is not valid"))
+		log.Fatal("Playbook is not valid")
+	}
+
+	input_data := getUserInputFromPrompt(playbook)
+	if input_data == nil {
+		log.Fatal(errors.New("prompt failed"))
+	}
+
+	for _, render := range playbook.Outputs {
+		renderedFileContents, outputFilePath, err := pb.RenderTemplate(playbook_base_dir, input_data, render.TemplateFile, render.OutputFile)
 		if err != nil {
 			pb.CaptureError(err)
 			log.Fatal(err)
 		}
 
-		err = pb.ValidatePlaybook(playbook, playbook_base_dir)
+		err = pb.SaveToOutputFile(outputFilePath, renderedFileContents, overwriteFlag, appendFlag)
 		if err != nil {
-			pb.CaptureError(errors.New("playbook is not valid"))
-			log.Fatal("Playbook is not valid")
+			pb.CaptureError(err)
+			log.Fatal(err)
 		}
+		fmt.Printf("Output saved successfully to %v\n", outputFilePath)
+	}
+}
 
-		input_data := make(map[string]interface{})
-		for _, question := range playbook.Questions {
-			if question.InputType == "select" {
+func getUserInputFromPrompt(playbook pb.Playbook) map[string]interface{} {
+	input_data := make(map[string]interface{})
+	for _, question := range playbook.Questions {
+		if question.InputType == "select" {
 
-				prompt := promptui.Select{
-					Label: question.Prompt,
-					Items: question.ValidValues,
-				}
-
-				_, result, err := prompt.Run()
-
-				if err != nil {
-					pb.CaptureError(err)
-					fmt.Printf("Prompt failed %v\n", err)
-					return
-				}
-				input_data[question.VariableName] = result
+			prompt := promptui.Select{
+				Label: question.Prompt,
+				Items: question.ValidValues,
 			}
-			if question.InputType == "textfield" {
-				validate := func(input string) error {
-					if input == "" {
-						return errors.New("empty input")
-					}
-					return nil
-				}
 
-				prompt := promptui.Prompt{
-					Label:    question.Prompt,
-					Validate: validate,
-				}
+			_, result, err := prompt.Run()
 
-				result, err := prompt.Run()
-
-				if err != nil {
-					pb.CaptureError(err)
-					fmt.Printf("Prompt failed %v\n", err)
-					return
-				}
-				input_data[question.VariableName] = result
-			}
-		}
-
-		for _, render := range playbook.Outputs {
-			renderedFileContents, outputFilePath, err := pb.RenderTemplate(playbook_base_dir, input_data, render.TemplateFile, render.OutputFile)
 			if err != nil {
 				pb.CaptureError(err)
-				log.Fatal(err)
+				fmt.Printf("Prompt failed %v\n", err)
+				return nil
+			}
+			input_data[question.VariableName] = result
+		}
+		if question.InputType == "textfield" {
+			validate := func(input string) error {
+				if input == "" {
+					return errors.New("empty input")
+				}
+				return nil
 			}
 
-			err = pb.SaveToOutputFile(outputFilePath, renderedFileContents, overwriteFlag, appendFlag)
+			prompt := promptui.Prompt{
+				Label:    question.Prompt,
+				Validate: validate,
+			}
+
+			result, err := prompt.Run()
+
 			if err != nil {
 				pb.CaptureError(err)
-				log.Fatal(err)
+				fmt.Printf("Prompt failed %v\n", err)
+				return nil
 			}
-			fmt.Printf("Output saved successfully to %v\n", outputFilePath)
+			input_data[question.VariableName] = result
 		}
-	},
+	}
+	return input_data
 }
 
 var validateCmd = &cobra.Command{
