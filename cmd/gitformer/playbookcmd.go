@@ -41,6 +41,7 @@ var runCmd = &cobra.Command{
 		}
 		input_data := make(map[string]interface{})
 		for _, question := range playbook.Questions {
+			var result string
 			if question.InputType == "select" {
 
 				prompt := promptui.Select{
@@ -48,7 +49,7 @@ var runCmd = &cobra.Command{
 					Items: question.ValidValues,
 				}
 
-				_, result, err := prompt.Run()
+				_, result, err = prompt.Run()
 
 				if err != nil {
 					pb.CaptureError(err)
@@ -70,7 +71,7 @@ var runCmd = &cobra.Command{
 					Validate: validate,
 				}
 
-				result, err := prompt.Run()
+				result, err = prompt.Run()
 
 				if err != nil {
 					pb.CaptureError(err)
@@ -78,6 +79,24 @@ var runCmd = &cobra.Command{
 					return
 				}
 				input_data[question.VariableName] = result
+			}
+
+			if question.CustomRegexValidation != "" && question.Validation != "" {
+				log.Println("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them")
+				pb.CaptureError(errors.New("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them"))
+				return
+			} else if question.CustomRegexValidation != "" {
+				if err := pb.CustomRegexValidate(result, question.CustomRegexValidation); err != nil {
+					log.Println(err)
+					pb.CaptureError(err)
+					return
+				}
+			} else if question.Validation != "" {
+				if err := pb.RegexPatternValidate(result, question); err != nil {
+					log.Println(err)
+					pb.CaptureError(err)
+					return
+				}
 			}
 		}
 

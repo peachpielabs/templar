@@ -7,6 +7,7 @@ questions:
     required: true
     inputType: textfield
     variableType: string
+    validation: "domain_name"
   - prompt: "DNS record type"
     inputType: select
     variableName: record_type
@@ -16,18 +17,24 @@ questions:
       - A
       - CNAME
     default: A
+    customRegexValidation: "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$"
   - prompt: "DNS Value (IP Address for A records or fully qualified domain name for CNAME records)"
     variableName: record_value
     inputType: textfield
     required: true
     placeholder: "192.168.1.1"
     variableType: string
+    validation: "ip_address"
   - prompt: "TTL (Time to Live)"
     variableName: ttl
     inputType: textfield
     required: true
     variableType: int
     default: "3600"
+    validation: "integer_range"
+    range:
+      min: 0
+      max: 3600
 outputs:
   - templateFile: zone_record.tpl
     outputFile: terraform/{{.subdomain_name}}.tf

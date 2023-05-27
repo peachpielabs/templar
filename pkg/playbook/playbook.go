@@ -28,14 +28,23 @@ type Playbook struct {
 }
 
 type Question struct {
-	Prompt       string   `yaml:"prompt,omitempty"`
-	Placeholder  string   `yaml:"placeholder,omitempty"`
-	Required     bool     `yaml:"required,omitempty"`
-	VariableName string   `yaml:"variableName"`
-	InputType    string   `yaml:"inputType"`
-	VariableType string   `yaml:"variableType"`
-	Default      string   `yaml:"default,omitempty"`
-	ValidValues  []string `yaml:"validValues,omitempty"`
+	Prompt                string        `yaml:"prompt,omitempty"`
+	Placeholder           string        `yaml:"placeholder,omitempty"`
+	Required              bool          `yaml:"required,omitempty"`
+	VariableName          string        `yaml:"variableName"`
+	InputType             string        `yaml:"inputType"`
+	VariableType          string        `yaml:"variableType"`
+	Default               string        `yaml:"default,omitempty"`
+	ValidValues           []string      `yaml:"validValues,omitempty"`
+	Validation            string        `yaml:"validation,omitempty"`
+	CustomRegexValidation string        `yaml:"customRegexValidation,omitempty"`
+	Range                 *IntegerRange `yaml:"range,omitempty"`
+	ValidPatterns         []string      `yaml:"validPatterns,omitempty"`
+}
+
+type IntegerRange struct {
+	Min int `yaml:"min"`
+	Max int `yaml:"max"`
 }
 
 type Output struct {
