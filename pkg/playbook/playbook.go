@@ -5,6 +5,7 @@ Copyright (c) 2023 Peach Pie Labs, LLC.
 package playbook
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -124,31 +126,70 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 	return true, nil
 }
 
-func RenderTemplate(playbook_base_dir string, input_data map[string]interface{}, template_filepath string, output_filepath string) error {
+func RenderTemplate(playbook_base_dir string, input_data map[string]interface{}, template_filepath string, output_filepath string) (string, string, error) {
 	template_filepath = playbook_base_dir + "/" + template_filepath
 	filenameTemplate := template.Must(template.New("filename").Parse(output_filepath))
 	var fileTpl bytes.Buffer
 	err := filenameTemplate.Execute(&fileTpl, input_data)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	outputFilePath := playbook_base_dir + "/" + fileTpl.String()
-	outputDir := path.Dir(outputFilePath)
 	fmt.Printf("rendering template %v to %v\n", template_filepath, outputFilePath)
 
 	tmpl, err := template.New(filepath.Base(template_filepath)).ParseFiles(template_filepath)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	var tpl bytes.Buffer
 	err = tmpl.Execute(&tpl, input_data)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	renderedFileContents := tpl.String()
 
+	return renderedFileContents, outputFilePath, nil
+}
+
+func SaveToOutputFile(outputFilePath, renderedFileContents string, overwriteFlag, appendFlag bool) error {
+	_, err := os.Stat(outputFilePath)
+	if err == nil {
+		return writeToExistingFile(outputFilePath, renderedFileContents, overwriteFlag, appendFlag)
+	}
+	if os.IsNotExist(err) {
+		return overwriteToFile(outputFilePath, renderedFileContents)
+	}
+	return err
+}
+
+func writeToExistingFile(outputFilePath, renderedFileContents string, overwriteFlag, appendFlag bool) error {
+	var overwrite *bool
+	flag := true
+
+	if overwriteFlag && appendFlag {
+		overwrite = promptForConfirmation("The output file already exists. Do you want to overwrite it? (yes/no): ")
+	} else if overwriteFlag {
+		overwrite = &flag
+	} else if appendFlag {
+		return appendToFile(outputFilePath, renderedFileContents)
+	} else {
+		overwrite = promptForConfirmation("The output file already exists. Do you want to overwrite it? (yes/no): ")
+	}
+
+	if overwrite == nil {
+		log.Println("provide valid response")
+		return errors.New("invalid response")
+	} else if *overwrite {
+		return overwriteToFile(outputFilePath, renderedFileContents)
+	}
+
+	return errors.New("overwrite the file, delete the file, or provide a new name")
+}
+
+func overwriteToFile(outputFilePath, renderedFileContents string) error {
+	outputDir := path.Dir(outputFilePath)
 	// Create all necessary directories for the output file
-	err = os.MkdirAll(outputDir, os.ModePerm)
+	err := os.MkdirAll(outputDir, os.ModePerm)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -166,7 +207,40 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 		return err
 	}
 
-	fmt.Printf("Template rendered successfully to %v\n", outputFilePath)
+	return nil
+}
+
+func appendToFile(outputFilePath, renderedFileContents string) error {
+	// Open the file in append mode, create it if it doesn't exist, and grant read-write permissions
+	file, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Append the content to the file
+	_, err = file.Write([]byte(renderedFileContents))
+	if err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func promptForConfirmation(message string) *bool {
+	var flag bool
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print(message)
+		answer, _ := reader.ReadString('\n')
+		answer = strings.ToLower(strings.TrimSpace(answer))
+
+		if answer == "yes" || answer == "y" {
+			flag = true
+			return &flag
+		} else if answer == "no" || answer == "n" {
+			return &flag
+		}
+	}
 }
