@@ -231,15 +231,16 @@ func promptForConfirmation(message string) *bool {
 	var flag bool
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print(message)
-	answer, _ := reader.ReadString('\n')
-	answer = strings.ToLower(strings.TrimSpace(answer))
-	if answer == "yes" || answer == "y" {
-		flag = true
-		return &flag
-	} else if answer == "no" || answer == "n" {
-		return &flag
-	}
+	for {
+		fmt.Print(message)
+		answer, _ := reader.ReadString('\n')
+		answer = strings.ToLower(strings.TrimSpace(answer))
 
-	return nil
+		if answer == "yes" || answer == "y" {
+			flag = true
+			return &flag
+		} else if answer == "no" || answer == "n" {
+			return &flag
+		}
+	}
 }
