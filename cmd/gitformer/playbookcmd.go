@@ -15,9 +15,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	overwriteFlag bool
+	appendFlag    bool
+)
+
 func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(validateCmd)
+
+	// Add flags for --overwrite and --append
+	runCmd.PersistentFlags().BoolVarP(&overwriteFlag, "overwrite", "o", false, "Overwrite the output file if it exists")
+	runCmd.PersistentFlags().BoolVarP(&appendFlag, "append", "a", false, "Append to the output file if it exists")
 }
 
 var runCmd = &cobra.Command{
@@ -101,11 +110,18 @@ var runCmd = &cobra.Command{
 		}
 
 		for _, render := range playbook.Outputs {
-			err := pb.RenderTemplate(playbook_base_dir, input_data, render.TemplateFile, render.OutputFile)
+			renderedFileContents, outputFilePath, err := pb.RenderTemplate(playbook_base_dir, input_data, render.TemplateFile, render.OutputFile)
 			if err != nil {
 				pb.CaptureError(err)
 				log.Fatal(err)
 			}
+
+			err = pb.SaveToOutputFile(outputFilePath, renderedFileContents, overwriteFlag, appendFlag)
+			if err != nil {
+				pb.CaptureError(err)
+				log.Fatal(err)
+			}
+			fmt.Printf("Output saved successfully to %v\n", outputFilePath)
 		}
 	},
 }
