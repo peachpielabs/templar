@@ -35,6 +35,16 @@ questions:
     range:
       min: 0
       max: 3600
+  - prompt: "URL address"
+    inputType: textfield
+    variableName: url
+    required: true
+    variableType: string
+    validation: "url"
+    validPatterns:
+      - any
+      - https
+      - http
 outputs:
   - templateFile: zone_record.tpl
     outputFile: terraform/{{.subdomain_name}}.tf

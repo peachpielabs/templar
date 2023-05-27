@@ -55,6 +55,15 @@ var expected_playbook_data = Playbook{
 				Max: 3600,
 			},
 		},
+		{
+			Prompt:        "URL address",
+			Required:      true,
+			VariableName:  "url",
+			VariableType:  "string",
+			InputType:     "textfield",
+			Validation:    "url",
+			ValidPatterns: []string{"any", "https", "http"},
+		},
 	},
 	Outputs: []Output{
 		{
@@ -119,6 +128,7 @@ func TestRenderTemplate(t *testing.T) {
 	input_data["record_type"] = "A"
 	input_data["record_value"] = "8.8.8.8"
 	input_data["ttl"] = "3600"
+	input_data["url"] = "https://myurl.com"
 
 	playbook_base_dir := "../../examples/terraform_new_zone_record"
 	template_file := "zone_record.tpl"
