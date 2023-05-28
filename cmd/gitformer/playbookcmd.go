@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/manifoldco/promptui"
-	"log"
-	"path"
-
 	pb "github.com/peachpielabs/gitformer/pkg/playbook"
 	"github.com/spf13/cobra"
+	"log"
+	"path"
+	"strings"
 )
 
 var (
@@ -84,6 +84,19 @@ func runPlaybook(playbook_filepath string) {
 func getUserInputFromPrompt(playbook pb.Playbook) map[string]interface{} {
 	input_data := make(map[string]interface{})
 	for _, question := range playbook.Questions {
+
+		if question.If != "" {
+			match, err := isConditionTrue(question.If, input_data)
+			if err != nil {
+				pb.CaptureError(err)
+				fmt.Printf("Invalid Condition: \"%s\". Error: %s", question.If, err.Error())
+				return nil
+			}
+			if !match {
+				continue
+			}
+		}
+
 		if question.InputType == "select" {
 
 			prompt := promptui.Select{
@@ -152,4 +165,34 @@ var validateCmd = &cobra.Command{
 		}
 		log.Println("Playbook is valid!!")
 	},
+}
+
+func isConditionTrue(condition string, data map[string]interface{}) (bool, error) {
+	parts := strings.Fields(condition)
+	if len(parts) != 3 {
+		return false, errors.New("the condition needs to contain 3 space seperated parts to be valid. i.e. : \"record_type == CNAME\"")
+	}
+	operator := parts[1]
+	if operator == "||" || operator == "&&" {
+		variable1, variable2 := parts[0], parts[2]
+
+		_, exist1 := data[variable1]
+		_, exist2 := data[variable2]
+
+		if operator == "||" {
+			return exist1 || exist2, nil
+		} else if operator == "&&" {
+			return exist1 && exist2, nil
+		}
+	} else if operator == "==" {
+		variable, value := parts[0], parts[2]
+		return data[variable] == value, nil
+	} else if operator == "!=" {
+		variable, value := parts[0], parts[2]
+		return data[variable] != value, nil
+	} else {
+		err := fmt.Errorf("unsupported operator %s. The supported operators are \"==\" , \"!=\" , \"||\" , \"&&\"\n", operator)
+		return false, err
+	}
+	return true, nil
 }

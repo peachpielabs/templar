@@ -31,6 +31,7 @@ type Playbook struct {
 
 type Question struct {
 	Prompt       string   `yaml:"prompt,omitempty"`
+	If           string   `yaml:"if"`
 	Placeholder  string   `yaml:"placeholder,omitempty"`
 	Required     bool     `yaml:"required,omitempty"`
 	VariableName string   `yaml:"variableName"`
