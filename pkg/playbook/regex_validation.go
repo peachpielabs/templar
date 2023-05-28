@@ -31,7 +31,29 @@ func RegexPatternValidate(value string, question Question) error {
 	} else if question.Validation == "email" {
 		flag = validateEmail(value)
 	} else if question.Validation == "url" {
-		flag = validateURL(value, false)
+		var isAny, isHttps, isHttp bool
+		var schema string
+		for _, valildPattern := range question.ValidPatterns {
+			if valildPattern == "any" {
+				isAny = true
+			} else if valildPattern == "https" {
+				isHttps = true
+			} else if valildPattern == "http" {
+				isHttp = true
+			} else {
+				return errors.New("invalid value found in the place of validPatterns field")
+			}
+		}
+		if isAny || (isHttp && isHttps) {
+			schema = "any"
+		} else if isHttp {
+			schema = "http"
+		} else if isHttps {
+			schema = "https"
+		} else {
+			return errors.New("found no value of validPattern")
+		}
+		flag = validateURL(value, schema)
 	} else if question.Validation == "integer_range" {
 		if question.Range == nil {
 			return errors.New("for integer_range the range field is necessary")
@@ -71,9 +93,19 @@ func validateDomain(domain string) bool {
 	return matched
 }
 
-func validateURL(rawurl string, httpsOnly bool) bool {
+func validateURL(rawurl string, schema string) bool {
 	u, err := url.Parse(rawurl)
-	return err == nil && u.Scheme != "" && u.Host != "" && (!httpsOnly || u.Scheme == "https")
+	if err != nil {
+		return false
+	}
+
+	if schema == "https" && u.Scheme != "https" {
+		return false
+	}
+	if schema == "http" && u.Scheme != "http" {
+		return false
+	}
+	return u.Scheme != "" && u.Host != ""
 }
 
 func validateIntegerRange(number, min, max int) bool {

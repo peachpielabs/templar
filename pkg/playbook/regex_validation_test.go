@@ -115,7 +115,8 @@ func TestRegexPatternValidate(t *testing.T) {
 			args: args{
 				value: "https://myurl.example.com",
 				question: Question{
-					Validation: "url",
+					Validation:    "url",
+					ValidPatterns: []string{"https"},
 				},
 			},
 			wantErr: false,
