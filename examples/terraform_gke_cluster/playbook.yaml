@@ -16,7 +16,16 @@ questions:
     variableName: cluster_name
     required: true
     variableType: string
-  - prompt: "Cluster Location"
+  - prompt: "Cluster Region"
+    inputType: select
+    variableName: cluster_region
+    required: true
+    variableType: string
+    validValues:
+      - us
+      - europe
+  - prompt: "Cluster Location in US"
+    if: cluster_region == us
     inputType: select
     variableName: cluster_location
     required: true
@@ -25,6 +34,13 @@ questions:
       - us-east
       - us-west
       - us-central
+  - prompt: "Cluster Location in Europe"
+    if: cluster_region == europe
+    inputType: select
+    variableName: cluster_location
+    required: true
+    variableType: string
+    validValues:
       - eu-north
       - eu-central
   - prompt: "Node Count"

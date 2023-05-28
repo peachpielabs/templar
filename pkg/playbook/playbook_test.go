@@ -101,9 +101,29 @@ var gke_cluster_playbook_data = Playbook{
 			InputType:    "textfield",
 		},
 		{
+			Prompt:       "Cluster Region",
+			Required:     true,
+			VariableName: "cluster_region",
+			VariableType: "string",
+			InputType:    "select",
+			ValidValues:  []string{"us", "europe"},
+			Placeholder:  "us",
+		},
+		{
 			Prompt:       "Cluster Location",
 			Required:     true,
 			VariableName: "cluster_location",
+			If:           "cluster_region == us",
+			VariableType: "string",
+			InputType:    "select",
+			ValidValues:  []string{"us-east", "us-west", "us-central"},
+			Placeholder:  "us-east",
+		},
+		{
+			Prompt:       "Cluster Location",
+			Required:     true,
+			VariableName: "cluster_location",
+			If:           "cluster_region == europe",
 			VariableType: "string",
 			InputType:    "select",
 			ValidValues:  []string{"us-east", "us-west", "us-central", "eu-north", "eu-central"},
@@ -204,7 +224,7 @@ func getPlaybookTestData() []playbookTest {
 	playbookTests = append(playbookTests, playbookTest{playbook: empty_var_type, playbook_base_dir: playbook_base_dir, wantErr: true})
 
 	var zero_valid_values = gke_cluster_playbook_data
-	for i, _ := range zero_valid_values.Questions {
+	for i, _ := range zero_valid_values.Questions { // Picking up the question of which have select input type
 		if zero_valid_values.Questions[i].ValidValues != nil && len(zero_valid_values.Questions[i].ValidValues) > 0 {
 
 			question = zero_valid_values.Questions[i]
@@ -220,7 +240,25 @@ func getPlaybookTestData() []playbookTest {
 
 			break
 		}
+	}
 
+	var wrong_condition_syntax = gke_cluster_playbook_data
+	for i, _ := range wrong_condition_syntax.Questions { // Picking up the question of which have if conditon
+		if wrong_condition_syntax.Questions[i].If != "" {
+
+			question = wrong_condition_syntax.Questions[i]
+			question.If = "a==b" // making it zero size
+			wrong_condition_syntax.Questions = append(wrong_condition_syntax.Questions, question)
+			playbookTests = append(playbookTests, playbookTest{playbook: wrong_condition_syntax, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+			var wrong_condition_operator = gke_cluster_playbook_data
+			question = wrong_condition_operator.Questions[i]
+			question.If = "cluster_region !== europe"
+			wrong_condition_operator.Questions = append(wrong_condition_operator.Questions, question)
+			playbookTests = append(playbookTests, playbookTest{playbook: wrong_condition_operator, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+			break
+		}
 	}
 
 	return playbookTests
