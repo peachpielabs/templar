@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/manifoldco/promptui"
 
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v2"
@@ -267,4 +268,43 @@ func promptForConfirmation(message string) *bool {
 			return &flag
 		}
 	}
+}
+
+func PromptForUserInput(question Question) (string, error) {
+	var result string
+	var err error
+	if question.InputType == "select" {
+
+		prompt := promptui.Select{
+			Label: question.Prompt,
+			Items: question.ValidValues,
+		}
+
+		_, result, err = prompt.Run()
+
+		if err != nil {
+			return "", fmt.Errorf("Prompt failed %v\n", err)
+		}
+	}
+	if question.InputType == "textfield" {
+		validate := func(input string) error {
+			if input == "" {
+				return errors.New("empty input")
+			}
+			return nil
+		}
+
+		prompt := promptui.Prompt{
+			Label:    question.Prompt,
+			Validate: validate,
+		}
+
+		result, err = prompt.Run()
+
+		if err != nil {
+			return "", fmt.Errorf("Prompt failed %v\n", err)
+		}
+	}
+
+	return result, nil
 }
