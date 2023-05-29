@@ -91,6 +91,26 @@ func TestRegexPatternValidate(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "invalid_ip_address",
+			args: args{
+				value: "450.65.13",
+				question: Question{
+					Validation: "ip_address",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_ip_address",
+			args: args{
+				value: "50.65.13",
+				question: Question{
+					Validation: "ip_address",
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "valid_email",
 			args: args{
 				value: "sha@gmail.com",
@@ -111,6 +131,16 @@ func TestRegexPatternValidate(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "invalid_email",
+			args: args{
+				value: "@gmail.com",
+				question: Question{
+					Validation: "email",
+				},
+			},
+			wantErr: true,
+		},
+		{
 			name: "valid_url",
 			args: args{
 				value: "https://myurl.example.com",
@@ -122,11 +152,66 @@ func TestRegexPatternValidate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid_url",
+			args: args{
+				value: "https://myurl.example.com",
+				question: Question{
+					Validation:    "url",
+					ValidPatterns: []string{"any"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid_url",
+			args: args{
+				value: "https://myurl.example.com",
+				question: Question{
+					Validation:    "url",
+					ValidPatterns: []string{"https", "http"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid_url",
+			args: args{
+				value: "http://myurl.example.com",
+				question: Question{
+					Validation:    "url",
+					ValidPatterns: []string{"http"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid_url",
+			args: args{
+				value: "http://myurl.example.com",
+				question: Question{
+					Validation:    "url",
+					ValidPatterns: []string{"any"},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "invalid_url",
 			args: args{
 				value: "attps://myurl example.com",
 				question: Question{
 					Validation: "url",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_url",
+			args: args{
+				value: "attps://myurl example.com",
+				question: Question{
+					Validation:    "url",
+					ValidPatterns: []string{"https", "http"},
 				},
 			},
 			wantErr: true,
@@ -155,6 +240,30 @@ func TestRegexPatternValidate(t *testing.T) {
 						Min: 600,
 						Max: 1000,
 					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_integer_range",
+			args: args{
+				value: "500",
+				question: Question{
+					Validation: "integer_range",
+					Range: &IntegerRange{
+						Min: 600,
+						Max: 1000,
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_integer_range",
+			args: args{
+				value: "500",
+				question: Question{
+					Validation: "integer_range",
 				},
 			},
 			wantErr: true,
