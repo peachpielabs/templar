@@ -116,10 +116,6 @@ var runCmd = &cobra.Command{
 					pb.CaptureError(err)
 					return
 				}
-			} else {
-				log.Println("either validation or customRegexValidation is must need to be provided")
-				pb.CaptureError(errors.New("either validation or customRegexValidation is must need to be provided"))
-				return
 			}
 		}
 
