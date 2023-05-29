@@ -264,6 +264,19 @@ func TestRegexPatternValidate(t *testing.T) {
 				value: "500",
 				question: Question{
 					Validation: "integer_range",
+					Range: &IntegerRange{
+						Min: 5,
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_integer_range",
+			args: args{
+				value: "500",
+				question: Question{
+					Validation: "integer_range",
 				},
 			},
 			wantErr: true,
