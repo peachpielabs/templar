@@ -97,6 +97,18 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 		return false, errors.New("Playbook must have at least one question")
 	}
 	for _, question := range playbook.Questions {
+		if question.CustomRegexValidation != "" && question.Validation != "" {
+			return false, errors.New("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them")
+		} else if question.CustomRegexValidation != "" {
+			if question.ValidPatterns != nil {
+				return false, errors.New("validPatterns is not allowed in customRegexValidation")
+			}
+		} else if question.Validation != "" {
+			if question.ValidPatterns != nil && question.Validation != "url" {
+				return false, errors.New("validPatterns field comes only with validation=url")
+			}
+		}
+
 		if question.Prompt == "" {
 			return false, errors.New("every question must have a prompt")
 		}

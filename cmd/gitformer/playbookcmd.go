@@ -48,6 +48,13 @@ var runCmd = &cobra.Command{
 			pb.CaptureError(err)
 			log.Fatal(err)
 		}
+
+		isValid, err := pb.ValidatePlaybook(playbook, playbook_base_dir)
+		if err != nil || !isValid {
+			pb.CaptureError(errors.Join(errors.New("playbook is not valid: "), err))
+			log.Fatal("playbook is not valid: ", err)
+		}
+
 		input_data := make(map[string]interface{})
 		for _, question := range playbook.Questions {
 			var result string
@@ -90,27 +97,13 @@ var runCmd = &cobra.Command{
 				input_data[question.VariableName] = result
 			}
 
-			if question.CustomRegexValidation != "" && question.Validation != "" {
-				log.Println("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them")
-				pb.CaptureError(errors.New("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them"))
-				return
-			} else if question.CustomRegexValidation != "" {
-				if question.ValidPatterns != nil {
-					log.Println("validPatterns is not allowed in customRegexValidation")
-					pb.CaptureError(errors.New("validPatterns is not allowed in customRegexValidation"))
-					return
-				}
+			if question.CustomRegexValidation != "" {
 				if err := pb.CustomRegexValidate(result, question.CustomRegexValidation); err != nil {
 					log.Println(err)
 					pb.CaptureError(err)
 					return
 				}
 			} else if question.Validation != "" {
-				if question.ValidPatterns != nil && question.Validation != "url" {
-					log.Println("validPatterns field comes only with validation=url")
-					pb.CaptureError(errors.New("validPatterns field comes only with validation=url"))
-					return
-				}
 				if err := pb.RegexPatternValidate(result, question); err != nil {
 					log.Println(err)
 					pb.CaptureError(err)
