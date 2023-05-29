@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
 	"html/template"
 	"io"
 	"log"
@@ -126,7 +127,8 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 
 	// Load the template files and check that they are valid
 	for _, output := range playbook.Outputs {
-		_, err := template.ParseFiles(playbook_base_dir + "/" + output.TemplateFile)
+		template_filepath := playbook_base_dir + "/" + output.TemplateFile
+		_, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
 		if err != nil {
 			return false, err
 		}
@@ -137,7 +139,7 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 
 func RenderTemplate(playbook_base_dir string, input_data map[string]interface{}, template_filepath string, output_filepath string) (string, string, error) {
 	template_filepath = playbook_base_dir + "/" + template_filepath
-	filenameTemplate := template.Must(template.New("filename").Parse(output_filepath))
+	filenameTemplate := template.Must(template.New("filename").Funcs(sprig.FuncMap()).Parse(output_filepath))
 	var fileTpl bytes.Buffer
 	err := filenameTemplate.Execute(&fileTpl, input_data)
 	if err != nil {
@@ -146,7 +148,7 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 	outputFilePath := playbook_base_dir + "/" + fileTpl.String()
 	fmt.Printf("rendering template %v to %v\n", template_filepath, outputFilePath)
 
-	tmpl, err := template.New(filepath.Base(template_filepath)).ParseFiles(template_filepath)
+	tmpl, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
 	if err != nil {
 		return "", "", err
 	}
