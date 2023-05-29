@@ -41,6 +41,9 @@ func TestCustomRegexValidate(t *testing.T) {
 }
 
 func TestRegexPatternValidate(t *testing.T) {
+	mn := 400
+	mx := 1000
+
 	type args struct {
 		value    string
 		question Question
@@ -223,8 +226,8 @@ func TestRegexPatternValidate(t *testing.T) {
 				question: Question{
 					Validation: "integer_range",
 					Range: &IntegerRange{
-						Min: 0,
-						Max: 1000,
+						Min: &mn,
+						Max: &mx,
 					},
 				},
 			},
@@ -233,12 +236,26 @@ func TestRegexPatternValidate(t *testing.T) {
 		{
 			name: "invalid_integer_range",
 			args: args{
-				value: "500",
+				value: "200",
 				question: Question{
 					Validation: "integer_range",
 					Range: &IntegerRange{
-						Min: 600,
-						Max: 1000,
+						Min: &mn,
+						Max: &mx,
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_integer_range",
+			args: args{
+				value: "200",
+				question: Question{
+					Validation: "integer_range",
+					Range: &IntegerRange{
+						Min: &mn,
+						Max: &mx,
 					},
 				},
 			},
@@ -251,8 +268,7 @@ func TestRegexPatternValidate(t *testing.T) {
 				question: Question{
 					Validation: "integer_range",
 					Range: &IntegerRange{
-						Min: 600,
-						Max: 1000,
+						Min: &mn,
 					},
 				},
 			},
@@ -265,7 +281,21 @@ func TestRegexPatternValidate(t *testing.T) {
 				question: Question{
 					Validation: "integer_range",
 					Range: &IntegerRange{
-						Min: 5,
+						Max: &mx,
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid_integer_range",
+			args: args{
+				value: "500",
+				question: Question{
+					Validation: "integer_range",
+					Range: &IntegerRange{
+						Min: &mx,
+						Max: &mn,
 					},
 				},
 			},

@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
 	"html/template"
 	"io"
 	"log"
@@ -18,6 +17,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
 
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v2"
@@ -46,8 +47,8 @@ type Question struct {
 }
 
 type IntegerRange struct {
-	Min int `yaml:"min"`
-	Max int `yaml:"max"`
+	Min *int `yaml:"min"`
+	Max *int `yaml:"max"`
 }
 
 type Output struct {

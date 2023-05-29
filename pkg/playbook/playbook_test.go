@@ -9,6 +9,9 @@ import (
 	"testing"
 )
 
+var mn = 0
+var mx = 3600
+
 var expected_playbook_data = Playbook{
 	Name:        "New Zone Record",
 	Description: "Create a new DNS zone record using Terraform.",
@@ -50,8 +53,8 @@ var expected_playbook_data = Playbook{
 			Default:      "3600",
 			Validation:   "integer_range",
 			Range: &IntegerRange{
-				Min: 0,
-				Max: 3600,
+				Min: &mn,
+				Max: &mx,
 			},
 		},
 		{

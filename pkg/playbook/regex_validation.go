@@ -59,8 +59,15 @@ func RegexPatternValidate(value string, question Question) error {
 			return errors.New("for integer_range the range field is necessary")
 		}
 
-		mn := question.Range.Min
-		mx := question.Range.Max
+		if question.Range.Min == nil || question.Range.Max == nil {
+			return errors.New("for integer_range min and max requied")
+		}
+		mn := *question.Range.Min
+		mx := *question.Range.Max
+
+		if mn > mx {
+			return errors.New("min cannot be greater than max")
+		}
 
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
