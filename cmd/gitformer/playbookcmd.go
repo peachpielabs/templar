@@ -10,7 +10,6 @@ import (
 	"log"
 	"path"
 
-	"github.com/manifoldco/promptui"
 	pb "github.com/peachpielabs/gitformer/pkg/playbook"
 	"github.com/spf13/cobra"
 )
@@ -48,45 +47,38 @@ var runCmd = &cobra.Command{
 			pb.CaptureError(err)
 			log.Fatal(err)
 		}
+
+		isValid, err := pb.ValidatePlaybook(playbook, playbook_base_dir)
+		if err != nil || !isValid {
+			pb.CaptureError(errors.Join(errors.New("playbook is not valid: "), err))
+			log.Fatal("playbook is not valid: ", err)
+		}
+
 		input_data := make(map[string]interface{})
 		for _, question := range playbook.Questions {
-			if question.InputType == "select" {
-
-				prompt := promptui.Select{
-					Label: question.Prompt,
-					Items: question.ValidValues,
-				}
-
-				_, result, err := prompt.Run()
-
+			for {
+				result, err := pb.PromptForUserInput(question)
 				if err != nil {
 					pb.CaptureError(err)
-					fmt.Printf("Prompt failed %v\n", err)
-					return
+					log.Fatal(err)
 				}
-				input_data[question.VariableName] = result
-			}
-			if question.InputType == "textfield" {
-				validate := func(input string) error {
-					if input == "" {
-						return errors.New("empty input")
+
+				if question.CustomRegexValidation != "" {
+					if err := pb.CustomRegexValidate(result, question.CustomRegexValidation); err != nil {
+						log.Println(err)
+						pb.CaptureError(err)
+						continue
 					}
-					return nil
+				} else if question.Validation != "" {
+					if err := pb.RegexPatternValidate(result, question); err != nil {
+						log.Println(err)
+						pb.CaptureError(err)
+						continue
+					}
 				}
 
-				prompt := promptui.Prompt{
-					Label:    question.Prompt,
-					Validate: validate,
-				}
-
-				result, err := prompt.Run()
-
-				if err != nil {
-					pb.CaptureError(err)
-					fmt.Printf("Prompt failed %v\n", err)
-					return
-				}
 				input_data[question.VariableName] = result
+				break
 			}
 		}
 

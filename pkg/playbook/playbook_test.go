@@ -5,10 +5,12 @@ Copyright (c) 2023 Peach Pie Labs, LLC.
 package playbook
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
+
+var mn = 0
+var mx = 3600
 
 var expected_playbook_data = Playbook{
 	Name:        "New Zone Record",
@@ -21,15 +23,17 @@ var expected_playbook_data = Playbook{
 			VariableName: "subdomain_name",
 			VariableType: "string",
 			InputType:    "textfield",
+			Validation:   "domain_name",
 		},
 		{
-			Prompt:       "DNS record type",
-			Required:     true,
-			VariableName: "record_type",
-			VariableType: "string",
-			InputType:    "select",
-			ValidValues:  []string{"A", "CNAME"},
-			Default:      "A",
+			Prompt:                "DNS record type",
+			Required:              true,
+			VariableName:          "record_type",
+			VariableType:          "string",
+			InputType:             "select",
+			ValidValues:           []string{"A", "CNAME"},
+			Default:               "A",
+			CustomRegexValidation: "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$",
 		},
 		{
 			Prompt:       "DNS Value (IP Address for A records or fully qualified domain name for CNAME records)",
@@ -38,6 +42,7 @@ var expected_playbook_data = Playbook{
 			VariableType: "string",
 			InputType:    "textfield",
 			Placeholder:  "192.168.1.1",
+			Validation:   "ip_address",
 		},
 		{
 			Prompt:       "TTL (Time to Live)",
@@ -46,6 +51,20 @@ var expected_playbook_data = Playbook{
 			VariableType: "int",
 			InputType:    "textfield",
 			Default:      "3600",
+			Validation:   "integer_range",
+			Range: &IntegerRange{
+				Min: &mn,
+				Max: &mx,
+			},
+		},
+		{
+			Prompt:        "URL address",
+			Required:      true,
+			VariableName:  "url",
+			VariableType:  "string",
+			InputType:     "textfield",
+			Validation:    "url",
+			ValidPatterns: []string{"any", "https", "http"},
 		},
 	},
 	Outputs: []Output{
@@ -88,14 +107,6 @@ func getPlaybookTestData() []playbookTest {
 	return playbookTests
 }
 
-func TestLoadYAMLFile(t *testing.T) {
-	file_path := "../../examples/terraform_new_zone_record/playbook.yaml"
-	playbook, err := LoadYAMLFile(file_path)
-	if !cmp.Equal(playbook, expected_playbook_data) || err != nil {
-		t.Fatalf(`Expected parsed playbook contents to match for playbook: %v, error: %s`, file_path, err)
-	}
-}
-
 func TestValidatePlaybook(t *testing.T) {
 	for _, test := range getPlaybookTestData() {
 		if output, err := ValidatePlaybook(test.playbook, test.playbook_base_dir); output != test.expected {
@@ -103,22 +114,6 @@ func TestValidatePlaybook(t *testing.T) {
 		}
 	}
 
-}
-
-func TestRenderTemplate(t *testing.T) {
-	input_data := make(map[string]interface{})
-	input_data["subdomain_name"] = "testsubdomain"
-	input_data["record_type"] = "A"
-	input_data["record_value"] = "8.8.8.8"
-	input_data["ttl"] = "3600"
-
-	playbook_base_dir := "../../examples/terraform_new_zone_record"
-	template_file := "zone_record.tpl"
-	output_file := "terraform/testsubdomain.tf"
-	_, _, err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
-	if err != nil {
-		t.Fatalf("Error rendering template: %s", err)
-	}
 }
 
 func TestRenderTemplateWithList(t *testing.T) {
@@ -132,5 +127,109 @@ func TestRenderTemplateWithList(t *testing.T) {
 	_, _, err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
 	if err != nil {
 		t.Fatalf("Error rendering template: %s", err)
+	}
+}
+
+func TestLoadYAMLFile(t *testing.T) {
+	type args struct {
+		file_path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Playbook
+		wantErr bool
+	}{
+		{
+			name: "first",
+			args: args{
+				file_path: "../../examples/terraform_new_zone_record/playbook.yaml",
+			},
+			want:    expected_playbook_data,
+			wantErr: false,
+		},
+		{
+			name: "second",
+			args: args{
+				file_path: "../../examples/terraform_new_zone_record/playbook2.yaml",
+			},
+			want:    expected_playbook_data,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := LoadYAMLFile(tt.args.file_path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LoadYAMLFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) && !tt.wantErr {
+				t.Errorf("LoadYAMLFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRenderTemplate(t *testing.T) {
+	type args struct {
+		playbook_base_dir string
+		input_data        map[string]interface{}
+		template_filepath string
+		output_filepath   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		want1   string
+		wantErr bool
+	}{
+		{
+			name: "first",
+			args: args{
+				playbook_base_dir: "../../examples/terraform_new_zone_record",
+				input_data: map[string]interface{}{
+					"subdomain_name": "testsubdomain",
+					"record_type":    "A",
+					"record_value":   "8.8.8.8",
+					"ttl":            "3600",
+					"url":            "https://myurl.com",
+				},
+				template_filepath: "zone_record.tpl",
+				output_filepath:   "terraform/testsubdomain.tf",
+			},
+			want1:   "../../examples/terraform_new_zone_record/terraform/testsubdomain.tf",
+			wantErr: false,
+		},
+		{
+			name: "second",
+			args: args{
+				playbook_base_dir: "../../examples/terraform_new_zone_record",
+				input_data: map[string]interface{}{
+					"subdomain_name": "testsubdomain",
+					"record_type":    "A",
+					"record_value":   "8.8.8.8",
+					"ttl":            3600,
+					"url":            "https://myurl.com",
+				},
+				template_filepath: "zone_record.tpl",
+				output_filepath:   "terraform/testsubdomain.tf",
+			},
+			want1:   "../../examples/terraform_new_zone_record/terraform/testsubdomain.tf",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, got1, err := RenderTemplate(tt.args.playbook_base_dir, tt.args.input_data, tt.args.template_filepath, tt.args.output_filepath)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RenderTemplate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got1 != tt.want1 && !tt.wantErr {
+				t.Errorf("RenderTemplate() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
 	}
 }

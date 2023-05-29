@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
 	"html/template"
 	"io"
 	"log"
@@ -18,6 +17,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/manifoldco/promptui"
 
 	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v2"
@@ -31,14 +33,23 @@ type Playbook struct {
 }
 
 type Question struct {
-	Prompt       string   `yaml:"prompt,omitempty"`
-	Placeholder  string   `yaml:"placeholder,omitempty"`
-	Required     bool     `yaml:"required,omitempty"`
-	VariableName string   `yaml:"variableName"`
-	InputType    string   `yaml:"inputType"`
-	VariableType string   `yaml:"variableType"`
-	Default      string   `yaml:"default,omitempty"`
-	ValidValues  []string `yaml:"validValues,omitempty"`
+	Prompt                string        `yaml:"prompt,omitempty"`
+	Placeholder           string        `yaml:"placeholder,omitempty"`
+	Required              bool          `yaml:"required,omitempty"`
+	VariableName          string        `yaml:"variableName"`
+	InputType             string        `yaml:"inputType"`
+	VariableType          string        `yaml:"variableType"`
+	Default               string        `yaml:"default,omitempty"`
+	ValidValues           []string      `yaml:"validValues,omitempty"`
+	Validation            string        `yaml:"validation,omitempty"`
+	CustomRegexValidation string        `yaml:"customRegexValidation,omitempty"`
+	Range                 *IntegerRange `yaml:"range,omitempty"`
+	ValidPatterns         []string      `yaml:"validPatterns,omitempty"`
+}
+
+type IntegerRange struct {
+	Min *int `yaml:"min"`
+	Max *int `yaml:"max"`
 }
 
 type Output struct {
@@ -87,6 +98,18 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 		return false, errors.New("Playbook must have at least one question")
 	}
 	for _, question := range playbook.Questions {
+		if question.CustomRegexValidation != "" && question.Validation != "" {
+			return false, errors.New("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them")
+		} else if question.CustomRegexValidation != "" {
+			if question.ValidPatterns != nil {
+				return false, errors.New("validPatterns is not allowed in customRegexValidation")
+			}
+		} else if question.Validation != "" {
+			if question.ValidPatterns != nil && question.Validation != "url" {
+				return false, errors.New("validPatterns field comes only with validation=url")
+			}
+		}
+
 		if question.Prompt == "" {
 			return false, errors.New("every question must have a prompt")
 		}
@@ -245,4 +268,43 @@ func promptForConfirmation(message string) *bool {
 			return &flag
 		}
 	}
+}
+
+func PromptForUserInput(question Question) (string, error) {
+	var result string
+	var err error
+	if question.InputType == "select" {
+
+		prompt := promptui.Select{
+			Label: question.Prompt,
+			Items: question.ValidValues,
+		}
+
+		_, result, err = prompt.Run()
+
+		if err != nil {
+			return "", fmt.Errorf("Prompt failed %v\n", err)
+		}
+	}
+	if question.InputType == "textfield" {
+		validate := func(input string) error {
+			if input == "" {
+				return errors.New("empty input")
+			}
+			return nil
+		}
+
+		prompt := promptui.Prompt{
+			Label:    question.Prompt,
+			Validate: validate,
+		}
+
+		result, err = prompt.Run()
+
+		if err != nil {
+			return "", fmt.Errorf("Prompt failed %v\n", err)
+		}
+	}
+
+	return result, nil
 }
