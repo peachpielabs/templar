@@ -141,8 +141,9 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 
 	// Load the template files and check that they are valid
 	for _, output := range playbook.Outputs {
-		template_filepath := playbook_base_dir + "/" + output.TemplateFile
-		_, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
+		templateFile := filepath.Base(output.TemplateFile)
+		templateFilePath := filepath.Join(playbook_base_dir, templateFile)
+		_, err := template.New(templateFile).Funcs(sprig.FuncMap()).ParseFiles(templateFilePath)
 		if err != nil {
 			return false, err
 		}
@@ -152,7 +153,8 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 }
 
 func RenderTemplate(playbook_base_dir string, input_data map[string]interface{}, template_filepath string, output_filepath string) (string, string, error) {
-	template_filepath = playbook_base_dir + "/" + template_filepath
+	templateFile := filepath.Base(template_filepath)
+	templateFilePath := filepath.Join(playbook_base_dir, templateFile)
 	filenameTemplate := template.Must(template.New("filename").Funcs(sprig.FuncMap()).Parse(output_filepath))
 	var fileTpl bytes.Buffer
 	err := filenameTemplate.Execute(&fileTpl, input_data)
@@ -160,9 +162,9 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 		return "", "", err
 	}
 	outputFilePath := playbook_base_dir + "/" + fileTpl.String()
-	fmt.Printf("rendering template %v to %v\n", template_filepath, outputFilePath)
+	fmt.Printf("rendering template %v to %v\n", templateFilePath, outputFilePath)
 
-	tmpl, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
+	tmpl, err := template.New(templateFile).Funcs(sprig.FuncMap()).ParseFiles(templateFilePath)
 	if err != nil {
 		return "", "", err
 	}
