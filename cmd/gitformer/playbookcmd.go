@@ -57,6 +57,17 @@ var runCmd = &cobra.Command{
 		input_data := make(map[string]interface{})
 		for _, question := range playbook.Questions {
 			for {
+				if question.If != "" {
+					is_condition_true, err := pb.IsConditionTrue(question.If, input_data)
+					if err != nil {
+						err = fmt.Errorf("invalid Condition: \"%s\". Error: %s", question.If, err.Error())
+						log.Println(err)
+						pb.CaptureError(err)
+					}
+					if !is_condition_true {
+						break
+					}
+				}
 				result, err := pb.PromptForUserInput(question)
 				if err != nil {
 					pb.CaptureError(err)
