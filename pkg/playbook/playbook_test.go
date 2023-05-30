@@ -12,7 +12,7 @@ import (
 var mn = 0
 var mx = 3600
 
-var expected_playbook_data = Playbook{
+var zone_record_playbook_data = Playbook{
 	Name:        "New Zone Record",
 	Description: "Create a new DNS zone record using Terraform.",
 	Questions: []Question{
@@ -75,33 +75,152 @@ var expected_playbook_data = Playbook{
 	},
 }
 
+var gke_cluster_playbook_data = Playbook{
+	Name:        "New GKE Cluster",
+	Description: "reate a new GKE Cluster using Terraform.",
+	Questions: []Question{
+		{
+			Prompt:       "Service Account ID",
+			Required:     true,
+			VariableName: "service_account_id",
+			VariableType: "string",
+			InputType:    "textfield",
+		},
+		{
+			Prompt:       "Service Account Name",
+			Required:     true,
+			VariableName: "service_account_name",
+			VariableType: "string",
+			InputType:    "textfield",
+		},
+		{
+			Prompt:       "Cluster Name",
+			Required:     true,
+			VariableName: "cluster_name",
+			VariableType: "string",
+			InputType:    "textfield",
+		},
+		{
+			Prompt:       "Cluster Location",
+			Required:     true,
+			VariableName: "cluster_location",
+			VariableType: "string",
+			InputType:    "select",
+			ValidValues:  []string{"us-east", "us-west", "us-central", "eu-north", "eu-central"},
+			Placeholder:  "us-east",
+		},
+		{
+			Prompt:       "Node Count",
+			Required:     true,
+			VariableName: "node_count",
+			VariableType: "int",
+			InputType:    "textfield",
+			Default:      "3",
+		},
+	},
+	Outputs: []Output{
+		{
+			TemplateFile: "gkecluster.tpl",
+			OutputFile:   "terraform/{{.cluster_name}}.tf",
+		},
+	},
+}
+
 type playbookTest struct {
 	playbook          Playbook
 	playbook_base_dir string
-	expected          bool
+	wantErr           bool
 }
 
 func getPlaybookTestData() []playbookTest {
-	var empty_playbook_data = Playbook{}
-	var playbook_without_name = expected_playbook_data
-	playbook_without_name.Name = ""
-	var playbook_without_questions = expected_playbook_data
-	playbook_without_questions.Questions = []Question{}
-	var playbook_with_nil_questions = expected_playbook_data
-	playbook_with_nil_questions.Questions = nil
-	var playbook_without_outputs = expected_playbook_data
-	playbook_without_outputs.Outputs = []Output{}
-	var playbook_with_nil_outputs = expected_playbook_data
-	playbook_with_nil_outputs.Outputs = nil
 
-	var playbookTests = []playbookTest{
-		{expected_playbook_data, "../../examples/terraform_new_zone_record", true},
-		{empty_playbook_data, "../../examples/terraform_new_zone_record", false},
-		{playbook_without_name, "../../examples/terraform_new_zone_record", false},
-		{playbook_without_questions, "../../examples/terraform_new_zone_record", false},
-		{playbook_with_nil_questions, "../../examples/terraform_new_zone_record", false},
-		{playbook_without_outputs, "../../examples/terraform_new_zone_record", false},
-		{playbook_with_nil_outputs, "../../examples/terraform_new_zone_record", false},
+	var playbookTests = []playbookTest{}
+	var playbook_base_dir = "../../examples/terraform_new_zone_record"
+
+	playbookTests = append(playbookTests, playbookTest{playbook: zone_record_playbook_data, playbook_base_dir: playbook_base_dir, wantErr: false})
+
+	var empty_playbook_data = Playbook{}
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_playbook_data, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var playbook_without_name = zone_record_playbook_data
+	playbook_without_name.Name = ""
+	playbookTests = append(playbookTests, playbookTest{playbook: playbook_without_name, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var playbook_without_questions = zone_record_playbook_data
+	playbook_without_questions.Questions = []Question{}
+	playbookTests = append(playbookTests, playbookTest{playbook: playbook_without_questions, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var playbook_with_nil_questions = zone_record_playbook_data
+	playbook_with_nil_questions.Questions = nil
+	playbookTests = append(playbookTests, playbookTest{playbook: playbook_with_nil_questions, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var playbook_without_outputs = zone_record_playbook_data
+	playbook_without_outputs.Outputs = []Output{}
+	playbookTests = append(playbookTests, playbookTest{playbook: playbook_without_outputs, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var playbook_with_nil_outputs = zone_record_playbook_data
+	playbook_with_nil_outputs.Outputs = nil
+	playbookTests = append(playbookTests, playbookTest{playbook: playbook_with_nil_outputs, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	// Starting New Test Cases with a new playbook
+	// Will test the different sections of questions and output
+	playbook_base_dir = "../../examples/terraform_gke_cluster"
+	playbookTests = append(playbookTests, playbookTest{playbook: gke_cluster_playbook_data, playbook_base_dir: playbook_base_dir, wantErr: false})
+
+	empty_template_file := gke_cluster_playbook_data
+	output := empty_template_file.Outputs[0]
+	output.TemplateFile = ""
+	empty_template_file.Outputs = append(empty_template_file.Outputs, output)
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_template_file, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var empty_output_file = gke_cluster_playbook_data
+	output = empty_output_file.Outputs[0]
+	output.OutputFile = ""
+	empty_output_file.Outputs = append(empty_output_file.Outputs, output)
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_output_file, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var empty_prompt = gke_cluster_playbook_data
+	question := empty_prompt.Questions[0]
+	question.Prompt = ""
+	empty_prompt.Questions = append(empty_prompt.Questions, question)
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_prompt, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var empty_variable = gke_cluster_playbook_data
+	question = empty_variable.Questions[0]
+	question.VariableName = ""
+	empty_variable.Questions = append(empty_variable.Questions, question)
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_variable, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var empty_input_type = gke_cluster_playbook_data
+	question = empty_input_type.Questions[0]
+	question.InputType = ""
+	empty_input_type.Questions = append(empty_input_type.Questions, question)
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_input_type, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var empty_var_type = gke_cluster_playbook_data
+	question = empty_var_type.Questions[0]
+	question.VariableType = ""
+	empty_var_type.Questions = append(empty_var_type.Questions, question)
+	playbookTests = append(playbookTests, playbookTest{playbook: empty_var_type, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+	var zero_valid_values = gke_cluster_playbook_data
+	for i, _ := range zero_valid_values.Questions {
+		if zero_valid_values.Questions[i].ValidValues != nil && len(zero_valid_values.Questions[i].ValidValues) > 0 {
+
+			question = zero_valid_values.Questions[i]
+			question.ValidValues = question.ValidValues[:0] // making it zero size
+			zero_valid_values.Questions = append(zero_valid_values.Questions, question)
+			playbookTests = append(playbookTests, playbookTest{playbook: zero_valid_values, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+			var empty_valid_values = gke_cluster_playbook_data
+			question = empty_valid_values.Questions[i]
+			question.ValidValues = nil
+			empty_valid_values.Questions = append(empty_valid_values.Questions, question)
+			playbookTests = append(playbookTests, playbookTest{playbook: empty_valid_values, playbook_base_dir: playbook_base_dir, wantErr: true})
+
+			break
+		}
+
 	}
 
 	return playbookTests
@@ -109,11 +228,17 @@ func getPlaybookTestData() []playbookTest {
 
 func TestValidatePlaybook(t *testing.T) {
 	for _, test := range getPlaybookTestData() {
-		if output, err := ValidatePlaybook(test.playbook, test.playbook_base_dir); output != test.expected {
-			t.Errorf("Output %v not equal to expected %v; err: %v", output, test.expected, err)
+		err := ValidatePlaybook(test.playbook, test.playbook_base_dir)
+		if err != nil {
+			if !test.wantErr {
+				t.Errorf("Did not wanted error but happened in %s playbook. err: %v", test.playbook.Name, err)
+			}
+		} else {
+			if test.wantErr {
+				t.Errorf("Wanted error but did not happen for the given playbook %s", test.playbook.Name)
+			}
 		}
 	}
-
 }
 
 func TestRenderTemplateWithList(t *testing.T) {
@@ -145,7 +270,7 @@ func TestLoadYAMLFile(t *testing.T) {
 			args: args{
 				file_path: "../../examples/terraform_new_zone_record/playbook.yaml",
 			},
-			want:    expected_playbook_data,
+			want:    zone_record_playbook_data,
 			wantErr: false,
 		},
 		{
@@ -153,7 +278,7 @@ func TestLoadYAMLFile(t *testing.T) {
 			args: args{
 				file_path: "../../examples/terraform_new_zone_record/playbook2.yaml",
 			},
-			want:    expected_playbook_data,
+			want:    zone_record_playbook_data,
 			wantErr: true,
 		},
 	}

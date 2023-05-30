@@ -89,53 +89,56 @@ func LoadYAMLFile(file_path string) (Playbook, error) {
 	return playbook, err
 }
 
-func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error) {
+func ValidatePlaybook(playbook Playbook, playbook_base_dir string) error {
 
 	if playbook.Name == "" {
-		return false, errors.New("playbook must have a name")
+		return errors.New("playbook must have a name")
 	}
 	if playbook.Questions == nil || len(playbook.Questions) == 0 {
-		return false, errors.New("Playbook must have at least one question")
+		return errors.New("playbook must have at least one question")
 	}
 	for _, question := range playbook.Questions {
 		if question.CustomRegexValidation != "" && question.Validation != "" {
-			return false, errors.New("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them")
+			return errors.New("customRegexValidation and validation both are not allowed to put in playbook, provide only one of them")
 		} else if question.CustomRegexValidation != "" {
 			if question.ValidPatterns != nil {
-				return false, errors.New("validPatterns is not allowed in customRegexValidation")
+				return errors.New("validPatterns is not allowed in customRegexValidation")
 			}
 		} else if question.Validation != "" {
 			if question.ValidPatterns != nil && question.Validation != "url" {
-				return false, errors.New("validPatterns field comes only with validation=url")
+				return errors.New("validPatterns field comes only with validation=url")
 			}
 		}
 
 		if question.Prompt == "" {
-			return false, errors.New("every question must have a prompt")
+			return errors.New("no prompt provided. every question must have a prompt")
 		}
 		if question.VariableName == "" {
-			return false, errors.New("every question must have a variable name")
+			return errors.New("no variable name provided. every question must have a variable name")
 		}
 		if question.InputType == "" {
-			return false, errors.New("every question must have an input type")
+			return errors.New("no inputType provided. every question must have an input type")
 		}
 		if question.VariableType == "" {
-			return false, errors.New("every question must have a variable type")
+			return errors.New("no variableType provided. every question must have a variable type")
 		}
 		if question.InputType == "select" && (question.ValidValues == nil || len(question.ValidValues) == 0) {
-			return false, errors.New("every select question must have at least one valid value")
+			return errors.New("select statement does not have a valid value. every select question must have at least one valid value")
 		}
 	}
 
 	// Check that there is at least one output
 	if playbook.Outputs == nil || len(playbook.Outputs) == 0 {
-		return false, errors.New("playbook must have at least one output (template file and output file)")
+		return errors.New("no output provided. playbook must have at least one output (template file and output file)")
 	}
 
 	// Check every output has both a template file and output file
 	for _, output := range playbook.Outputs {
-		if output.TemplateFile == "" || output.OutputFile == "" {
-			return false, errors.New("every output must have both a template file and output file")
+		if output.TemplateFile == "" {
+			return errors.New("no templateFile given in the output. every output must have a template file")
+		}
+		if output.OutputFile == "" {
+			return errors.New("no outputFile given in the output. every output must have a template file")
 		}
 	}
 
@@ -144,11 +147,11 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 		template_filepath := playbook_base_dir + "/" + output.TemplateFile
 		_, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
 		if err != nil {
-			return false, err
+			return errors.Join(errors.New("invalid template file. %s"), err)
 		}
 	}
 
-	return true, nil
+	return nil
 }
 
 func RenderTemplate(playbook_base_dir string, input_data map[string]interface{}, template_filepath string, output_filepath string) (string, string, error) {

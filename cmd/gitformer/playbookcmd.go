@@ -48,8 +48,8 @@ var runCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		isValid, err := pb.ValidatePlaybook(playbook, playbook_base_dir)
-		if err != nil || !isValid {
+		err = pb.ValidatePlaybook(playbook, playbook_base_dir)
+		if err != nil {
 			pb.CaptureError(errors.Join(errors.New("playbook is not valid: "), err))
 			log.Fatal("playbook is not valid: ", err)
 		}
@@ -118,17 +118,11 @@ var validateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		result, err := pb.ValidatePlaybook(playbook, playbook_base_dir)
+		err = pb.ValidatePlaybook(playbook, playbook_base_dir)
 		if err != nil {
-			pb.CaptureError(err)
-			log.Fatal(err)
-		}
-		if !result {
 			pb.CaptureError(errors.New("playbook is not valid"))
 			log.Fatal("Playbook is not valid")
-		} else {
-			pb.CaptureError(fmt.Errorf("playbook %v is valid", playbook.Name))
-			fmt.Printf("Playbook %v is valid\n", playbook.Name)
 		}
+		log.Println("Playbook is valid!!")
 	},
 }
