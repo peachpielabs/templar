@@ -116,8 +116,8 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 		if question.VariableName == "" {
 			return false, errors.New("every question must have a variable name")
 		}
-		if question.InputType == "" {
-			return false, errors.New("every question must have an input type")
+		if question.InputType == "" || (question.InputType != "select" && question.InputType != "textfield" && question.InputType != "list") {
+			return false, errors.New("every question must have a valid inputType field")
 		}
 		if question.VariableType == "" {
 			return false, errors.New("every question must have a variable type")
@@ -285,10 +285,9 @@ func PromptForUserInput(question Question) (string, error) {
 		_, result, err = prompt.Run()
 
 		if err != nil {
-			return "", fmt.Errorf("Prompt failed %v\n", err)
+			return "", fmt.Errorf("prompt failed: %v", err)
 		}
-	}
-	if question.InputType == "textfield" {
+	} else if question.InputType == "textfield" {
 		validate := func(input string) error {
 			if input == "" {
 				return errors.New("empty input")
@@ -304,7 +303,25 @@ func PromptForUserInput(question Question) (string, error) {
 		result, err = prompt.Run()
 
 		if err != nil {
-			return "", fmt.Errorf("Prompt failed %v\n", err)
+			return "", fmt.Errorf("prompt failed: %v", err)
+		}
+	} else if question.InputType == "list" {
+		validate := func(input string) error {
+			if input == "" {
+				return errors.New("empty input")
+			}
+			return nil
+		}
+
+		prompt := promptui.Prompt{
+			Label:    question.Prompt + " (comma delimited)",
+			Validate: validate,
+		}
+
+		result, err = prompt.Run()
+
+		if err != nil {
+			return "", fmt.Errorf("prompt failed: %v", err)
 		}
 	}
 
