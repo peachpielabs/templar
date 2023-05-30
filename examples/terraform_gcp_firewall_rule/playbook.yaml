@@ -8,11 +8,10 @@ questions:
     inputType: textfield
     variableType: string
   - prompt: "Source tags"
-    inputType: textfield
+    inputType: list
     variableName: source_tags
     required: true
-    variableType: string
-    default: A
+    variableType: list
 outputs:
-  - templatefile: examples/terraform_gcp_firewall_rule/firewall_rule.tpl
-    outputfile: examples/terraform_gcp_firewall_rule/terraform/{{.rule_name}}.tf
+  - templateFile: examples/terraform_gcp_firewall_rule/firewall_rule.tpl
+    outputFile: terraform/{{.rule_name}}.tf

@@ -116,20 +116,6 @@ func TestValidatePlaybook(t *testing.T) {
 
 }
 
-func TestRenderTemplateWithList(t *testing.T) {
-	input_data := make(map[string]interface{})
-	input_data["rule_name"] = "test_rule"
-	input_data["source_tags"] = [3]string{"A", "B", "C"}
-
-	playbook_base_dir := "../../examples/terraform_gcp_firewall_rule"
-	template_file := "../../examples/terraform_gcp_firewall_rule/firewall_rule.tpl"
-	output_file := "../../examples/terraform_gcp_firewall_rule/terraform/test_rule.tf"
-	_, _, err := RenderTemplate(playbook_base_dir, input_data, template_file, output_file)
-	if err != nil {
-		t.Fatalf("Error rendering template: %s", err)
-	}
-}
-
 func TestLoadYAMLFile(t *testing.T) {
 	type args struct {
 		file_path string
@@ -217,6 +203,20 @@ func TestRenderTemplate(t *testing.T) {
 				output_filepath:   "terraform/testsubdomain.tf",
 			},
 			want1:   "../../examples/terraform_new_zone_record/terraform/testsubdomain.tf",
+			wantErr: false,
+		},
+		{
+			name: "third",
+			args: args{
+				playbook_base_dir: "../../examples/terraform_gcp_firewall_rule",
+				input_data: map[string]interface{}{
+					"rule_name":   "test_rule",
+					"source_tags": "80,443",
+				},
+				template_filepath: "../../examples/terraform_gcp_firewall_rule/firewall_rule.tpl",
+				output_filepath:   "terraform/test_rule.tf",
+			},
+			want1:   "../../examples/terraform_gcp_firewall_rule/terraform/test_rule.tf",
 			wantErr: false,
 		},
 	}

@@ -116,8 +116,8 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 		if question.VariableName == "" {
 			return false, errors.New("every question must have a variable name")
 		}
-		if question.InputType == "" {
-			return false, errors.New("every question must have an input type")
+		if question.InputType == "" || (question.InputType != "select" && question.InputType != "textfield" && question.InputType != "list") {
+			return false, errors.New("every question must have a valid inputType field")
 		}
 		if question.VariableType == "" {
 			return false, errors.New("every question must have a variable type")
@@ -141,8 +141,9 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 
 	// Load the template files and check that they are valid
 	for _, output := range playbook.Outputs {
-		template_filepath := playbook_base_dir + "/" + output.TemplateFile
-		_, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
+		templateFile := filepath.Base(output.TemplateFile)
+		templateFilePath := filepath.Join(playbook_base_dir, templateFile)
+		_, err := template.New(templateFile).Funcs(sprig.FuncMap()).ParseFiles(templateFilePath)
 		if err != nil {
 			return false, err
 		}
@@ -152,7 +153,8 @@ func ValidatePlaybook(playbook Playbook, playbook_base_dir string) (bool, error)
 }
 
 func RenderTemplate(playbook_base_dir string, input_data map[string]interface{}, template_filepath string, output_filepath string) (string, string, error) {
-	template_filepath = playbook_base_dir + "/" + template_filepath
+	templateFile := filepath.Base(template_filepath)
+	templateFilePath := filepath.Join(playbook_base_dir, templateFile)
 	filenameTemplate := template.Must(template.New("filename").Funcs(sprig.FuncMap()).Parse(output_filepath))
 	var fileTpl bytes.Buffer
 	err := filenameTemplate.Execute(&fileTpl, input_data)
@@ -160,9 +162,9 @@ func RenderTemplate(playbook_base_dir string, input_data map[string]interface{},
 		return "", "", err
 	}
 	outputFilePath := playbook_base_dir + "/" + fileTpl.String()
-	fmt.Printf("rendering template %v to %v\n", template_filepath, outputFilePath)
+	fmt.Printf("rendering template %v to %v\n", templateFilePath, outputFilePath)
 
-	tmpl, err := template.New(filepath.Base(template_filepath)).Funcs(sprig.FuncMap()).ParseFiles(template_filepath)
+	tmpl, err := template.New(templateFile).Funcs(sprig.FuncMap()).ParseFiles(templateFilePath)
 	if err != nil {
 		return "", "", err
 	}
@@ -283,10 +285,9 @@ func PromptForUserInput(question Question) (string, error) {
 		_, result, err = prompt.Run()
 
 		if err != nil {
-			return "", fmt.Errorf("Prompt failed %v\n", err)
+			return "", fmt.Errorf("prompt failed: %v", err)
 		}
-	}
-	if question.InputType == "textfield" {
+	} else if question.InputType == "textfield" {
 		validate := func(input string) error {
 			if input == "" {
 				return errors.New("empty input")
@@ -302,7 +303,25 @@ func PromptForUserInput(question Question) (string, error) {
 		result, err = prompt.Run()
 
 		if err != nil {
-			return "", fmt.Errorf("Prompt failed %v\n", err)
+			return "", fmt.Errorf("prompt failed: %v", err)
+		}
+	} else if question.InputType == "list" {
+		validate := func(input string) error {
+			if input == "" {
+				return errors.New("empty input")
+			}
+			return nil
+		}
+
+		prompt := promptui.Prompt{
+			Label:    question.Prompt + " (comma delimited)",
+			Validate: validate,
+		}
+
+		result, err = prompt.Run()
+
+		if err != nil {
+			return "", fmt.Errorf("prompt failed: %v", err)
 		}
 	}
 

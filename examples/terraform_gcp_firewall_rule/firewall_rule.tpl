@@ -13,7 +13,7 @@ resource "google_compute_firewall" "{{.rule_name}}" {
 
   {{$first_tag := true}}
   source_tags = [
-    {{ range $tag := .source_tags }}{{if $first_tag}}{{$first_tag = false}}{{else}},
+    {{ range $tag := splitList "," .source_tags }}{{if $first_tag}}{{$first_tag = false}}{{else}},
     {{end}}"{{ $tag }}"{{end}}
   ]
 }
