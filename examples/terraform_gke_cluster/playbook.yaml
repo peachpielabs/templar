@@ -1,0 +1,38 @@
+name: New GKE Cluster
+description: "Create a new GKE Cluster using Terraform."
+questions:
+  - prompt: "Service Account ID"
+    variableName: service_account_id
+    required: true
+    inputType: textfield
+    variableType: string
+  - prompt: "Service Account Name"
+    inputType: textfield
+    variableName: service_account_name
+    required: true
+    variableType: string
+  - prompt: "Cluster Name"
+    inputType: textfield
+    variableName: cluster_name
+    required: true
+    variableType: string
+  - prompt: "Cluster Location"
+    inputType: select
+    variableName: cluster_location
+    required: true
+    variableType: string
+    validValues:
+      - us-east
+      - us-west
+      - us-central
+      - eu-north
+      - eu-central
+  - prompt: "Node Count"
+    variableName: node_count
+    inputType: textfield
+    required: true
+    variableType: int
+    default: "3"
+outputs:
+  - templateFile: gkecluster.tpl
+    outputFile: terraform/{{.cluster_name}}.tf
